@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
@@ -15,8 +17,39 @@ class Podomoro extends StatefulWidget {
 
 class _PodomoroState extends State<Podomoro> {
   double percent = 0;
-  static int TimeInMinute = 25;
-  int TimeInSec = TimeInMinute * 60;
+  static int timeInMinute = 25;
+  int timeInSec = timeInMinute * 60;
+  int timeInSecs = 0;
+
+  Timer timer;
+
+  _StartTimer() {
+    timeInMinute = 25;
+    timeInSec = timeInMinute * 60;
+    double SecPercent = (timeInSec / 1000);
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (timeInSec > 0) {
+          if (timeInSec % 60 == 0) {
+            timeInMinute--;
+          }
+          timeInSec--;
+          timeInSecs = timeInSec % 60;
+          if (timeInSec % SecPercent == 0) {
+            if (percent < 1) {
+              percent += 0.001;
+            } else {
+              percent = 1;
+            }
+          }
+        } else {
+          percent = 0;
+          timeInMinute = 25;
+          timer.cancel();
+        }
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +74,7 @@ class _PodomoroState extends State<Podomoro> {
               ),
               Expanded(
                 child: CircularPercentIndicator(
+                  circularStrokeCap: CircularStrokeCap.round,
                   percent: percent,
                   animation: true,
                   animateFromLastPercent: true,
@@ -48,7 +82,7 @@ class _PodomoroState extends State<Podomoro> {
                   lineWidth: 20.0,
                   progressColor: Colors.white,
                   center: Text(
-                    "$TimeInMinute",
+                    "$timeInMinute : $timeInSecs",
                     style: TextStyle(color: Colors.white, fontSize: 80.0),
                   ),
                 ),
@@ -121,10 +155,18 @@ class _PodomoroState extends State<Podomoro> {
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 28.0),
                           child: RaisedButton(
+                            onPressed: _StartTimer,
                             color: Colors.blue,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(100.0),
                             ),
+                            child: Padding(
+                                padding: EdgeInsets.all(20.0),
+                                child: Text("Start Studying",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 22.0,
+                                    ))),
                           ),
                         ),
                       ],
